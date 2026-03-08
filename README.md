@@ -2,6 +2,8 @@
 verified commit
 dummy
 
+test verified with tortoisegit
+
 Raw Gadget is a userspace interface for the Linux USB Gadget subsystem, and the upstream project supports both physical UDC-backed devices such as Raspberry Pi and virtual devices via Dummy HCD/UDC. The kernel docs also note that Raw Gadget depends on CONFIG_USB_RAW_GADGET.
 
 1. Install packages
