@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Minimal PL2303-style Raw Gadget example based on keyboard.c template.
-
+ 
 #include <assert.h>
 #include <fcntl.h>
 #include <pthread.h>
@@ -13,7 +13,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-
+ 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
@@ -23,20 +23,20 @@
 #include <signal.h>
 #include <stdatomic.h>
 #include <limits.h>
-
+ 
 #include <linux/types.h>
 #include <linux/usb/ch9.h>
-
+ 
 /*----------------------------------------------------------------------*/
-
+ 
 #define UDC_NAME_LENGTH_MAX 128
-
+ 
 struct usb_raw_init {
 	__u8 driver_name[UDC_NAME_LENGTH_MAX];
 	__u8 device_name[UDC_NAME_LENGTH_MAX];
 	__u8 speed;
 };
-
+ 
 enum usb_raw_event_type {
 	USB_RAW_EVENT_INVALID = 0,
 	USB_RAW_EVENT_CONNECT = 1,
@@ -46,24 +46,24 @@ enum usb_raw_event_type {
 	USB_RAW_EVENT_RESET = 5,
 	USB_RAW_EVENT_DISCONNECT = 6,
 };
-
+ 
 struct usb_raw_event {
 	__u32 type;
 	__u32 length;
 	__u8 data[];
 };
-
+ 
 struct usb_raw_ep_io {
 	__u16 ep;
 	__u16 flags;
 	__u32 length;
 	__u8 data[];
 };
-
+ 
 #define USB_RAW_EPS_NUM_MAX 30
 #define USB_RAW_EP_NAME_MAX 16
 #define USB_RAW_EP_ADDR_ANY 0xff
-
+ 
 struct usb_raw_ep_caps {
 	__u32 type_control : 1;
 	__u32 type_iso     : 1;
@@ -72,24 +72,24 @@ struct usb_raw_ep_caps {
 	__u32 dir_in       : 1;
 	__u32 dir_out      : 1;
 };
-
+ 
 struct usb_raw_ep_limits {
 	__u16 maxpacket_limit;
 	__u16 max_streams;
 	__u32 reserved;
 };
-
+ 
 struct usb_raw_ep_info {
 	__u8 name[USB_RAW_EP_NAME_MAX];
 	__u32 addr;
 	struct usb_raw_ep_caps caps;
 	struct usb_raw_ep_limits limits;
 };
-
+ 
 struct usb_raw_eps_info {
 	struct usb_raw_ep_info eps[USB_RAW_EPS_NUM_MAX];
 };
-
+ 
 #define USB_RAW_IOCTL_INIT           _IOW('U', 0, struct usb_raw_init)
 #define USB_RAW_IOCTL_RUN            _IO('U', 1)
 #define USB_RAW_IOCTL_EVENT_FETCH    _IOR('U', 2, struct usb_raw_event)
@@ -106,9 +106,9 @@ struct usb_raw_eps_info {
 #define USB_RAW_IOCTL_EP_SET_HALT    _IOW('U', 13, __u32)
 #define USB_RAW_IOCTL_EP_CLEAR_HALT  _IOW('U', 14, __u32)
 #define USB_RAW_IOCTL_EP_SET_WEDGE   _IOW('U', 15, __u32)
-
+ 
 /*----------------------------------------------------------------------*/
-
+ 
 int usb_raw_open(void) {
 	int fd = open("/dev/raw-gadget", O_RDWR);
 	if (fd < 0) {
@@ -117,7 +117,7 @@ int usb_raw_open(void) {
 	}
 	return fd;
 }
-
+ 
 void usb_raw_init(int fd, enum usb_device_speed speed,
 		  const char *driver, const char *device) {
 	struct usb_raw_init arg;
@@ -131,7 +131,7 @@ void usb_raw_init(int fd, enum usb_device_speed speed,
 		exit(EXIT_FAILURE);
 	}
 }
-
+ 
 void usb_raw_run(int fd) {
 	int rv = ioctl(fd, USB_RAW_IOCTL_RUN, 0);
 	if (rv < 0) {
@@ -139,7 +139,7 @@ void usb_raw_run(int fd) {
 		exit(EXIT_FAILURE);
 	}
 }
-
+ 
 void usb_raw_event_fetch(int fd, struct usb_raw_event *event) {
 	int rv = ioctl(fd, USB_RAW_IOCTL_EVENT_FETCH, event);
 	if (rv < 0) {
@@ -147,7 +147,7 @@ void usb_raw_event_fetch(int fd, struct usb_raw_event *event) {
 		exit(EXIT_FAILURE);
 	}
 }
-
+ 
 int usb_raw_ep0_read(int fd, struct usb_raw_ep_io *io) {
 	int rv = ioctl(fd, USB_RAW_IOCTL_EP0_READ, io);
 	if (rv < 0) {
@@ -156,7 +156,7 @@ int usb_raw_ep0_read(int fd, struct usb_raw_ep_io *io) {
 	}
 	return rv;
 }
-
+ 
 int usb_raw_ep0_write(int fd, struct usb_raw_ep_io *io) {
 	int rv = ioctl(fd, USB_RAW_IOCTL_EP0_WRITE, io);
 	if (rv < 0) {
@@ -165,7 +165,7 @@ int usb_raw_ep0_write(int fd, struct usb_raw_ep_io *io) {
 	}
 	return rv;
 }
-
+ 
 int usb_raw_ep_enable(int fd, struct usb_endpoint_descriptor *desc) {
 	int rv = ioctl(fd, USB_RAW_IOCTL_EP_ENABLE, desc);
 	if (rv < 0) {
@@ -174,7 +174,7 @@ int usb_raw_ep_enable(int fd, struct usb_endpoint_descriptor *desc) {
 	}
 	return rv;
 }
-
+ 
 int usb_raw_ep_disable(int fd, int ep) {
 	int rv = ioctl(fd, USB_RAW_IOCTL_EP_DISABLE, ep);
 	if (rv < 0) {
@@ -183,15 +183,15 @@ int usb_raw_ep_disable(int fd, int ep) {
 	}
 	return rv;
 }
-
+ 
 int usb_raw_ep_write_may_fail(int fd, struct usb_raw_ep_io *io) {
 	return ioctl(fd, USB_RAW_IOCTL_EP_WRITE, io);
 }
-
+ 
 int usb_raw_ep_read_may_fail(int fd, struct usb_raw_ep_io *io) {
 	return ioctl(fd, USB_RAW_IOCTL_EP_READ, io);
 }
-
+ 
 void usb_raw_configure(int fd) {
 	int rv = ioctl(fd, USB_RAW_IOCTL_CONFIGURE, 0);
 	if (rv < 0) {
@@ -199,7 +199,7 @@ void usb_raw_configure(int fd) {
 		exit(EXIT_FAILURE);
 	}
 }
-
+ 
 void usb_raw_vbus_draw(int fd, uint32_t power) {
 	int rv = ioctl(fd, USB_RAW_IOCTL_VBUS_DRAW, power);
 	if (rv < 0) {
@@ -207,7 +207,7 @@ void usb_raw_vbus_draw(int fd, uint32_t power) {
 		exit(EXIT_FAILURE);
 	}
 }
-
+ 
 int usb_raw_eps_info(int fd, struct usb_raw_eps_info *info) {
 	int rv = ioctl(fd, USB_RAW_IOCTL_EPS_INFO, info);
 	if (rv < 0) {
@@ -216,7 +216,7 @@ int usb_raw_eps_info(int fd, struct usb_raw_eps_info *info) {
 	}
 	return rv;
 }
-
+ 
 void usb_raw_ep0_stall(int fd) {
 	int rv = ioctl(fd, USB_RAW_IOCTL_EP0_STALL, 0);
 	if (rv < 0) {
@@ -224,15 +224,15 @@ void usb_raw_ep0_stall(int fd) {
 		exit(EXIT_FAILURE);
 	}
 }
-
+ 
 /*----------------------------------------------------------------------*/
-
+ 
 void log_control_request(struct usb_ctrlrequest *ctrl) {
 	printf("  bRequestType: 0x%x (%s), bRequest: 0x%x, wValue: 0x%x, wIndex: 0x%x, wLength: %d\n",
 	       ctrl->bRequestType,
 	       (ctrl->bRequestType & USB_DIR_IN) ? "IN" : "OUT",
 	       ctrl->bRequest, ctrl->wValue, ctrl->wIndex, ctrl->wLength);
-
+ 
 	switch (ctrl->bRequestType & USB_TYPE_MASK) {
 	case USB_TYPE_STANDARD:
 		printf("  type = USB_TYPE_STANDARD\n");
@@ -248,7 +248,7 @@ void log_control_request(struct usb_ctrlrequest *ctrl) {
 		break;
 	}
 }
-
+ 
 void log_event(struct usb_raw_event *event) {
 	switch (event->type) {
 	case USB_RAW_EVENT_CONNECT:
@@ -274,27 +274,27 @@ void log_event(struct usb_raw_event *event) {
 		printf("event: %d (unknown), length: %u\n", event->type, event->length);
 	}
 }
-
+ 
 /*----------------------------------------------------------------------*/
-
+ 
 #define BCD_USB 0x0200
 #define USB_VENDOR  0x067b
 #define USB_PRODUCT 0x2303
-
+ 
 #define STRING_ID_MANUFACTURER 1
 #define STRING_ID_PRODUCT      2
 #define STRING_ID_SERIAL       3
 #define STRING_ID_CONFIG       4
 #define STRING_ID_INTERFACE    5
-
+ 
 #define EP_MAX_PACKET_CONTROL 64
 #define EP_MAX_PACKET_BULK    64
-#define EP_MAX_PACKET_INT     16
-
+#define EP_MAX_PACKET_INT     8
+ 
 #define EP_NUM_BULK_OUT 0x0
 #define EP_NUM_BULK_IN  0x0
 #define EP_NUM_INT_IN   0x0
-
+ 
 struct usb_device_descriptor usb_device = {
 	.bLength = USB_DT_DEVICE_SIZE,
 	.bDescriptorType = USB_DT_DEVICE,
@@ -311,7 +311,7 @@ struct usb_device_descriptor usb_device = {
 	.iSerialNumber = STRING_ID_SERIAL,
 	.bNumConfigurations = 1,
 };
-
+ 
 struct usb_qualifier_descriptor usb_qualifier = {
 	.bLength = sizeof(struct usb_qualifier_descriptor),
 	.bDescriptorType = USB_DT_DEVICE_QUALIFIER,
@@ -323,7 +323,7 @@ struct usb_qualifier_descriptor usb_qualifier = {
 	.bNumConfigurations = 1,
 	.bRESERVED = 0,
 };
-
+ 
 struct usb_config_descriptor usb_config = {
 	.bLength = USB_DT_CONFIG_SIZE,
 	.bDescriptorType = USB_DT_CONFIG,
@@ -334,7 +334,7 @@ struct usb_config_descriptor usb_config = {
 	.bmAttributes = USB_CONFIG_ATT_ONE | USB_CONFIG_ATT_SELFPOWER,
 	.bMaxPower = 0x32,
 };
-
+ 
 struct usb_interface_descriptor usb_interface = {
 	.bLength = USB_DT_INTERFACE_SIZE,
 	.bDescriptorType = USB_DT_INTERFACE,
@@ -346,7 +346,7 @@ struct usb_interface_descriptor usb_interface = {
 	.bInterfaceProtocol = 0,
 	.iInterface = STRING_ID_INTERFACE,
 };
-
+ 
 struct usb_endpoint_descriptor usb_ep_bulk_out = {
 	.bLength = USB_DT_ENDPOINT_SIZE,
 	.bDescriptorType = USB_DT_ENDPOINT,
@@ -355,7 +355,7 @@ struct usb_endpoint_descriptor usb_ep_bulk_out = {
 	.wMaxPacketSize = __constant_cpu_to_le16(EP_MAX_PACKET_BULK),
 	.bInterval = 0,
 };
-
+ 
 struct usb_endpoint_descriptor usb_ep_bulk_in = {
 	.bLength = USB_DT_ENDPOINT_SIZE,
 	.bDescriptorType = USB_DT_ENDPOINT,
@@ -364,7 +364,7 @@ struct usb_endpoint_descriptor usb_ep_bulk_in = {
 	.wMaxPacketSize = __constant_cpu_to_le16(EP_MAX_PACKET_BULK),
 	.bInterval = 0,
 };
-
+ 
 struct usb_endpoint_descriptor usb_ep_int_in = {
 	.bLength = USB_DT_ENDPOINT_SIZE,
 	.bDescriptorType = USB_DT_ENDPOINT,
@@ -373,15 +373,17 @@ struct usb_endpoint_descriptor usb_ep_int_in = {
 	.wMaxPacketSize = __constant_cpu_to_le16(EP_MAX_PACKET_INT),
 	.bInterval = 10,
 };
-
+ 
 static const char *str_manufacturer = "Prolific";
 static const char *str_product = "PL2303 Serial";
 static const char *str_serial = "000123";
 static const char *str_config = "Default";
 static const char *str_interface = "UART";
-
+static bool use_int_ep = false;
+static bool force_disable_int_ep = false;
+ 
 /*----------------------------------------------------------------------*/
-
+ 
 static int make_string_desc(__u8 *buf, size_t buf_sz, const char *s) {
 	size_t len = strlen(s);
 	size_t total = 2 + len * 2;
@@ -395,51 +397,68 @@ static int make_string_desc(__u8 *buf, size_t buf_sz, const char *s) {
 	}
 	return (int)total;
 }
-
+ 
 int build_config(char *data, int length, bool other_speed) {
 	struct usb_config_descriptor *config = (struct usb_config_descriptor *)data;
 	int total_length = 0;
-
+	struct usb_interface_descriptor iface = usb_interface;
+ 
+	iface.bNumEndpoints = use_int_ep ? 3 : 2;
+ 
 	assert(length >= (int)sizeof(usb_config));
 	memcpy(data, &usb_config, sizeof(usb_config));
 	data += sizeof(usb_config);
 	length -= sizeof(usb_config);
 	total_length += sizeof(usb_config);
-
-	assert(length >= (int)sizeof(usb_interface));
-	memcpy(data, &usb_interface, sizeof(usb_interface));
-	data += sizeof(usb_interface);
-	length -= sizeof(usb_interface);
-	total_length += sizeof(usb_interface);
-
+ 
+	assert(length >= (int)sizeof(iface));
+	memcpy(data, &iface, sizeof(iface));
+	data += sizeof(iface);
+	length -= sizeof(iface);
+	total_length += sizeof(iface);
+ 
 	assert(length >= USB_DT_ENDPOINT_SIZE);
 	memcpy(data, &usb_ep_bulk_out, USB_DT_ENDPOINT_SIZE);
 	data += USB_DT_ENDPOINT_SIZE;
 	length -= USB_DT_ENDPOINT_SIZE;
 	total_length += USB_DT_ENDPOINT_SIZE;
-
+ 
 	assert(length >= USB_DT_ENDPOINT_SIZE);
 	memcpy(data, &usb_ep_bulk_in, USB_DT_ENDPOINT_SIZE);
 	data += USB_DT_ENDPOINT_SIZE;
 	length -= USB_DT_ENDPOINT_SIZE;
 	total_length += USB_DT_ENDPOINT_SIZE;
-
-	assert(length >= USB_DT_ENDPOINT_SIZE);
-	memcpy(data, &usb_ep_int_in, USB_DT_ENDPOINT_SIZE);
-	data += USB_DT_ENDPOINT_SIZE;
-	length -= USB_DT_ENDPOINT_SIZE;
-	total_length += USB_DT_ENDPOINT_SIZE;
-
+ 
+	if (use_int_ep) {
+		assert(length >= USB_DT_ENDPOINT_SIZE);
+		memcpy(data, &usb_ep_int_in, USB_DT_ENDPOINT_SIZE);
+		data += USB_DT_ENDPOINT_SIZE;
+		length -= USB_DT_ENDPOINT_SIZE;
+		total_length += USB_DT_ENDPOINT_SIZE;
+	}
+ 
 	config->wTotalLength = __cpu_to_le16(total_length);
 	printf("config->wTotalLength: %d\n", total_length);
 	if (other_speed)
 		config->bDescriptorType = USB_DT_OTHER_SPEED_CONFIG;
 	return total_length;
 }
-
+ 
 /*----------------------------------------------------------------------*/
-
+ 
+static bool endpoint_address_conflicts(__u8 addr, const struct usb_endpoint_descriptor *ep) {
+	if (&usb_ep_bulk_out != ep && usb_ep_bulk_out.bEndpointAddress == addr)
+		return true;
+	if (&usb_ep_bulk_in != ep && usb_ep_bulk_in.bEndpointAddress == addr)
+		return true;
+	if (&usb_ep_int_in != ep && usb_ep_int_in.bEndpointAddress == addr)
+		return true;
+	return false;
+}
+ 
 bool assign_ep_address(struct usb_raw_ep_info *info, struct usb_endpoint_descriptor *ep) {
+	__u8 candidate_addr;
+ 
 	if (usb_endpoint_num(ep) != 0)
 		return false;
 	if (usb_endpoint_dir_in(ep) && !info->caps.dir_in)
@@ -460,15 +479,27 @@ bool assign_ep_address(struct usb_raw_ep_info *info, struct usb_endpoint_descrip
 	default:
 		assert(false);
 	}
+ 
 	if (info->addr == USB_RAW_EP_ADDR_ANY) {
-		static int addr = 1;
-		ep->bEndpointAddress |= addr++;
+		static int next_in_addr = 1;
+		static int next_out_addr = 1;
+		if (usb_endpoint_dir_in(ep))
+			candidate_addr = (__u8)(USB_DIR_IN | next_in_addr++);
+		else
+			candidate_addr = (__u8)next_out_addr++;
 	} else {
-		ep->bEndpointAddress |= info->addr;
+		candidate_addr = (__u8)info->addr;
+		if (usb_endpoint_dir_in(ep))
+			candidate_addr |= USB_DIR_IN;
 	}
+ 
+	if (endpoint_address_conflicts(candidate_addr, ep))
+		return false;
+ 
+	ep->bEndpointAddress = candidate_addr;
 	return true;
 }
-
+ 
 void process_eps_info(int fd) {
 	struct usb_raw_eps_info info;
 	memset(&info, 0, sizeof(info));
@@ -487,87 +518,109 @@ void process_eps_info(int fd) {
 		printf("  maxpacket_limit: %u\n", info.eps[i].limits.maxpacket_limit);
 		printf("  max_streams: %u\n", info.eps[i].limits.max_streams);
 	}
-	for (int i = 0; i < num; i++) assign_ep_address(&info.eps[i], &usb_ep_bulk_out);
-	for (int i = 0; i < num; i++) assign_ep_address(&info.eps[i], &usb_ep_bulk_in);
-	for (int i = 0; i < num; i++) assign_ep_address(&info.eps[i], &usb_ep_int_in);
+ 
+	for (int i = 0; i < num; i++)
+		assign_ep_address(&info.eps[i], &usb_ep_bulk_out);
+ 
+	use_int_ep = false;
+	if (!force_disable_int_ep) {
+		for (int i = 0; i < num; i++) {
+			if (assign_ep_address(&info.eps[i], &usb_ep_int_in)) {
+				use_int_ep = true;
+				break;
+			}
+		}
+	}
+ 
+	for (int i = 0; i < num; i++)
+		assign_ep_address(&info.eps[i], &usb_ep_bulk_in);
+ 
 	assert(usb_endpoint_num(&usb_ep_bulk_out) != 0);
 	assert(usb_endpoint_num(&usb_ep_bulk_in) != 0);
-	assert(usb_endpoint_num(&usb_ep_int_in) != 0);
-	printf("ep_bulk_out: addr = %u\n", usb_endpoint_num(&usb_ep_bulk_out));
-	printf("ep_bulk_in : addr = %u\n", usb_endpoint_num(&usb_ep_bulk_in));
-	printf("ep_int_in  : addr = %u\n", usb_endpoint_num(&usb_ep_int_in));
+	printf("ep_bulk_out: addr = 0x%02x (num=%u, OUT)\n",
+       usb_ep_bulk_out.bEndpointAddress,
+       usb_endpoint_num(&usb_ep_bulk_out));
+	printf("ep_bulk_in : addr = 0x%02x (num=%u, IN)\n",
+       usb_ep_bulk_in.bEndpointAddress,
+       usb_endpoint_num(&usb_ep_bulk_in));
+	if (use_int_ep)
+		printf("ep_int_in  : addr = 0x%02x (num=%u, IN)\n",
+           usb_ep_int_in.bEndpointAddress,
+           usb_endpoint_num(&usb_ep_int_in));
+	else
+		printf("ep_int_in  : not available on this UDC, continuing without it\n");
 }
-
+ 
 /*----------------------------------------------------------------------*/
-
+ 
 #define EP0_MAX_DATA 256
-
+ 
 struct usb_raw_control_event {
 	struct usb_raw_event inner;
 	struct usb_ctrlrequest ctrl;
 };
-
+ 
 struct usb_raw_control_io {
 	struct usb_raw_ep_io inner;
 	char data[EP0_MAX_DATA];
 };
-
+ 
 struct usb_raw_bulk_io {
 	struct usb_raw_ep_io inner;
 	char data[EP_MAX_PACKET_BULK];
 };
-
+ 
 struct usb_raw_int_io {
 	struct usb_raw_ep_io inner;
 	char data[EP_MAX_PACKET_INT];
 };
-
+ 
 int ep_bulk_out = -1;
 int ep_bulk_in = -1;
 int ep_int_in = -1;
-
+ 
 int pty_master_fd = -1;
 int pty_slave_fd = -1;
 char pty_slave_name[128];
 const char *pty_symlink_path = "/dev/r2usbc";
 static volatile sig_atomic_t exit_signal = 0;
-
+ 
 pthread_t ep_bulk_out_thread;
 pthread_t ep_bulk_in_thread;
 pthread_t ep_int_in_thread;
-
+ 
 bool ep_bulk_out_thread_spawned = false;
 bool ep_bulk_in_thread_spawned = false;
 bool ep_int_in_thread_spawned = false;
-
+ 
 static pthread_mutex_t state_lock = PTHREAD_MUTEX_INITIALIZER;
 static atomic_bool gadget_online = false;
-
+ 
 /*----------------------------------------------------------------------*/
-
+ 
 void *ep_bulk_out_loop(void *arg) {
 	int fd = (int)(long)arg;
 	struct usb_raw_bulk_io io;
 	memset(&io, 0, sizeof(io));
-
+ 
 	while (true) {
 		int local_ep;
 		int local_pty_fd;
-
+ 
 		pthread_mutex_lock(&state_lock);
 		local_ep = ep_bulk_out;
 		local_pty_fd = pty_master_fd;
 		pthread_mutex_unlock(&state_lock);
-
+ 
 		if (!atomic_load(&gadget_online) || local_ep < 0) {
 			usleep(10000);
 			continue;
 		}
-
+ 
 		io.inner.ep = local_ep;
 		io.inner.flags = 0;
 		io.inner.length = sizeof(io.data);
-
+ 
 		int rv = usb_raw_ep_read_may_fail(fd, (struct usb_raw_ep_io *)&io);
 		if (rv < 0 && errno == ESHUTDOWN) {
 			printf("ep_bulk_out: device reset/shutdown, exiting\n");
@@ -581,7 +634,7 @@ void *ep_bulk_out_loop(void *arg) {
 			printf(" %02x", (unsigned char)io.inner.data[i]);
 		printf("\n");
 		fflush(stdout);
-
+ 
 		if (local_pty_fd >= 0 && rv > 0) {
 			ssize_t wr = write(local_pty_fd, io.inner.data, (size_t)rv);
 			if (wr < 0)
@@ -590,27 +643,27 @@ void *ep_bulk_out_loop(void *arg) {
 	}
 	return NULL;
 }
-
+ 
 void *ep_bulk_in_loop(void *arg) {
 	int fd = (int)(long)arg;
 	struct usb_raw_bulk_io io;
 	memset(&io, 0, sizeof(io));
 	io.inner.flags = 0;
-
+ 
 	while (true) {
 		int local_ep;
 		int local_pty_fd;
-
+ 
 		pthread_mutex_lock(&state_lock);
 		local_ep = ep_bulk_in;
 		local_pty_fd = pty_master_fd;
 		pthread_mutex_unlock(&state_lock);
-
+ 
 		if (!atomic_load(&gadget_online) || local_ep < 0 || local_pty_fd < 0) {
 			usleep(10000);
 			continue;
 		}
-
+ 
 		io.inner.ep = local_ep;
 		ssize_t rv = read(local_pty_fd, io.inner.data, sizeof(io.data));
 		if (rv < 0) {
@@ -625,7 +678,7 @@ void *ep_bulk_in_loop(void *arg) {
 		}
 		if (rv == 0)
 			continue;
-
+ 
 		io.inner.length = (uint32_t)rv;
 		int wr = usb_raw_ep_write_may_fail(fd, (struct usb_raw_ep_io *)&io);
 		if (wr < 0 && errno == ESHUTDOWN) {
@@ -635,47 +688,28 @@ void *ep_bulk_in_loop(void *arg) {
 			perror("usb_raw_ep_write_may_fail(ep_bulk_in)");
 			exit(EXIT_FAILURE);
 		}
-
+ 
 		printf("ep_bulk_in: sent %d bytes from PTY\n", wr);
 	}
 	return NULL;
 }
-
+ 
 void *ep_int_in_loop(void *arg) {
 	int fd = (int)(long)arg;
-	struct usb_raw_int_io io;
-	memset(&io, 0, sizeof(io));
-	io.inner.flags = 0;
-	io.inner.length = 10;
+	(void)fd;
+ 
 	while (true) {
-		int local_ep;
-		pthread_mutex_lock(&state_lock);
-		local_ep = ep_int_in;
-		pthread_mutex_unlock(&state_lock);
-
-		if (!atomic_load(&gadget_online) || local_ep < 0) {
+		if (!atomic_load(&gadget_online)) {
 			usleep(10000);
 			continue;
 		}
-
-		io.inner.ep = local_ep;
-		memset(&io.inner.data[0], 0, io.inner.length);
-		int rv = usb_raw_ep_write_may_fail(fd, (struct usb_raw_ep_io *)&io);
-		if (rv < 0 && errno == ESHUTDOWN) {
-			printf("ep_int_in: device reset/shutdown, exiting\n");
-			break;
-		} else if (rv < 0) {
-			perror("usb_raw_ep_write_may_fail()");
-			exit(EXIT_FAILURE);
-		}
-		printf("ep_int_in: sent %d bytes notification\n", rv);
-		sleep(1);
+		sleep(60);
 	}
 	return NULL;
 }
-
+ 
 /*----------------------------------------------------------------------*/
-
+ 
 bool handle_vendor_in_request(struct usb_ctrlrequest *ctrl, struct usb_raw_control_io *io) {
 	memset(io->data, 0, sizeof(io->data));
 	io->inner.length = ctrl->wLength;
@@ -684,7 +718,7 @@ bool handle_vendor_in_request(struct usb_ctrlrequest *ctrl, struct usb_raw_contr
 	printf("vendor IN stub: req=0x%02x len=%u\n", ctrl->bRequest, ctrl->wLength);
 	return true;
 }
-
+ 
 bool handle_vendor_out_request(struct usb_ctrlrequest *ctrl, struct usb_raw_control_io *io) {
 	io->inner.length = ctrl->wLength;
 	if (io->inner.length > sizeof(io->data))
@@ -693,7 +727,7 @@ bool handle_vendor_out_request(struct usb_ctrlrequest *ctrl, struct usb_raw_cont
 	       ctrl->bRequest, ctrl->wLength, ctrl->wValue, ctrl->wIndex);
 	return true;
 }
-
+ 
 bool handle_class_in_request(struct usb_ctrlrequest *ctrl, struct usb_raw_control_io *io) {
 	memset(io->data, 0, sizeof(io->data));
 	switch (ctrl->bRequest) {
@@ -714,7 +748,7 @@ bool handle_class_in_request(struct usb_ctrlrequest *ctrl, struct usb_raw_contro
 		return false;
 	}
 }
-
+ 
 bool handle_class_out_request(struct usb_ctrlrequest *ctrl, struct usb_raw_control_io *io) {
 	switch (ctrl->bRequest) {
 	case 0x20:
@@ -737,7 +771,7 @@ bool handle_class_out_request(struct usb_ctrlrequest *ctrl, struct usb_raw_contr
 		return false;
 	}
 }
-
+ 
 bool ep0_request(int fd, struct usb_raw_control_event *event, struct usb_raw_control_io *io) {
 	memset(io->data, 0, sizeof(io->data));
 	switch (event->ctrl.bRequestType & USB_TYPE_MASK) {
@@ -778,7 +812,8 @@ bool ep0_request(int fd, struct usb_raw_control_event *event, struct usb_raw_con
 				case STRING_ID_INTERFACE:    n = make_string_desc((__u8 *)&io->data[0], sizeof(io->data), str_interface); break;
 				default: return false;
 				}
-				if (n < 0) return false;
+				if (n < 0)
+					return false;
 				io->inner.length = n;
 				return true;
 			}
@@ -789,25 +824,40 @@ bool ep0_request(int fd, struct usb_raw_control_event *event, struct usb_raw_con
 			pthread_mutex_lock(&state_lock);
 			ep_bulk_out = usb_raw_ep_enable(fd, &usb_ep_bulk_out);
 			printf("ep0: ep_bulk_out enabled: %d\n", ep_bulk_out);
+			if (use_int_ep) {
+				ep_int_in = usb_raw_ep_enable(fd, &usb_ep_int_in);
+				printf("ep0: ep_int_in enabled: %d\n", ep_int_in);
+			} else {
+				ep_int_in = -1;
+				printf("ep0: ep_int_in disabled for this UDC\n");
+			}
 			ep_bulk_in = usb_raw_ep_enable(fd, &usb_ep_bulk_in);
 			printf("ep0: ep_bulk_in enabled: %d\n", ep_bulk_in);
-			ep_int_in = usb_raw_ep_enable(fd, &usb_ep_int_in);
-			printf("ep0: ep_int_in enabled: %d\n", ep_int_in);
 			atomic_store(&gadget_online, true);
 			pthread_mutex_unlock(&state_lock);
+ 
 			if (!ep_bulk_out_thread_spawned) {
 				int rv = pthread_create(&ep_bulk_out_thread, 0, ep_bulk_out_loop, (void *)(long)fd);
-				if (rv != 0) { perror("pthread_create(ep_bulk_out)"); exit(EXIT_FAILURE); }
+				if (rv != 0) {
+					perror("pthread_create(ep_bulk_out)");
+					exit(EXIT_FAILURE);
+				}
 				ep_bulk_out_thread_spawned = true;
 			}
 			if (!ep_bulk_in_thread_spawned) {
 				int rv = pthread_create(&ep_bulk_in_thread, 0, ep_bulk_in_loop, (void *)(long)fd);
-				if (rv != 0) { perror("pthread_create(ep_bulk_in)"); exit(EXIT_FAILURE); }
+				if (rv != 0) {
+					perror("pthread_create(ep_bulk_in)");
+					exit(EXIT_FAILURE);
+				}
 				ep_bulk_in_thread_spawned = true;
 			}
-			if (!ep_int_in_thread_spawned) {
+			if (use_int_ep && !ep_int_in_thread_spawned) {
 				int rv = pthread_create(&ep_int_in_thread, 0, ep_int_in_loop, (void *)(long)fd);
-				if (rv != 0) { perror("pthread_create(ep_int_in)"); exit(EXIT_FAILURE); }
+				if (rv != 0) {
+					perror("pthread_create(ep_int_in)");
+					exit(EXIT_FAILURE);
+				}
 				ep_int_in_thread_spawned = true;
 			}
 			usb_raw_vbus_draw(fd, usb_config.bMaxPower);
@@ -845,7 +895,7 @@ bool ep0_request(int fd, struct usb_raw_control_event *event, struct usb_raw_con
 		return false;
 	}
 }
-
+ 
 static void cleanup_runtime_artifacts(void) {
 	if (unlink(pty_symlink_path) < 0 && errno != ENOENT)
 		perror("unlink(/dev/r2usbc)");
@@ -858,7 +908,7 @@ static void cleanup_runtime_artifacts(void) {
 		pty_master_fd = -1;
 	}
 }
-
+ 
 static void handle_exit_signal(int sig) {
 	exit_signal = sig;
 	if (pty_master_fd >= 0)
@@ -868,10 +918,10 @@ static void handle_exit_signal(int sig) {
 	unlink(pty_symlink_path);
 	_exit(128 + sig);
 }
-
+ 
 void stop_threads_and_eps(int fd) {
 	atomic_store(&gadget_online, false);
-
+ 
 	if (ep_bulk_out_thread_spawned) {
 		printf("ep0: stopping ep_bulk_out thread\n");
 		pthread_cancel(ep_bulk_out_thread);
@@ -890,7 +940,7 @@ void stop_threads_and_eps(int fd) {
 		pthread_join(ep_int_in_thread, NULL);
 		ep_int_in_thread_spawned = false;
 	}
-
+ 
 	pthread_mutex_lock(&state_lock);
 	if (ep_bulk_out >= 0) {
 		usb_raw_ep_disable(fd, ep_bulk_out);
@@ -906,7 +956,7 @@ void stop_threads_and_eps(int fd) {
 	}
 	pthread_mutex_unlock(&state_lock);
 }
-
+ 
 void ep0_loop(int fd) {
 	while (true) {
 		struct usb_raw_control_event event;
@@ -924,19 +974,23 @@ void ep0_loop(int fd) {
 		}
 		if (event.inner.type != USB_RAW_EVENT_CONTROL)
 			continue;
+ 
 		struct usb_raw_control_io io;
 		memset(&io, 0, sizeof(io));
 		io.inner.ep = 0;
 		io.inner.flags = 0;
 		io.inner.length = 0;
+ 
 		bool reply = ep0_request(fd, &event, &io);
 		if (!reply) {
 			printf("ep0: stalling\n");
 			usb_raw_ep0_stall(fd);
 			continue;
 		}
+ 
 		if (event.ctrl.wLength < io.inner.length)
 			io.inner.length = event.ctrl.wLength;
+ 
 		if (event.ctrl.bRequestType & USB_DIR_IN) {
 			int rv = usb_raw_ep0_write(fd, (struct usb_raw_ep_io *)&io);
 			printf("ep0: transferred %d bytes (in)\n", rv);
@@ -945,28 +999,30 @@ void ep0_loop(int fd) {
 			printf("ep0: transferred %d bytes (out)\n", rv);
 			if ((event.ctrl.bRequestType & USB_TYPE_MASK) == USB_TYPE_VENDOR && rv > 0) {
 				printf("ep0 vendor OUT payload:");
-				for (int i = 0; i < rv; i++) printf(" %02x", (unsigned char)io.inner.data[i]);
+				for (int i = 0; i < rv; i++)
+					printf(" %02x", (unsigned char)io.inner.data[i]);
 				printf("\n");
 			}
 			if ((event.ctrl.bRequestType & USB_TYPE_MASK) == USB_TYPE_CLASS && rv > 0) {
 				printf("ep0 class OUT payload:");
-				for (int i = 0; i < rv; i++) printf(" %02x", (unsigned char)io.inner.data[i]);
+				for (int i = 0; i < rv; i++)
+					printf(" %02x", (unsigned char)io.inner.data[i]);
 				printf("\n");
 			}
 		}
 	}
 }
-
+ 
 int main(int argc, char **argv) {
 	const char *driver = "dummy_udc";
 	const char *device = "dummy_udc.0";
 	if (argc >= 2) driver = argv[1];
 	if (argc >= 3) device = argv[2];
-
+ 
 	signal(SIGINT, handle_exit_signal);
 	signal(SIGTERM, handle_exit_signal);
 	atexit(cleanup_runtime_artifacts);
-
+ 
 	struct termios tio;
 	memset(&tio, 0, sizeof(tio));
 	cfmakeraw(&tio);
@@ -987,7 +1043,7 @@ int main(int argc, char **argv) {
 	/* Keep the slave side open so reads on the PTY master do not fail with EIO
 	 * before the Pi-side service opens the slave path.
 	 */
-
+ 
 	int fd = usb_raw_open();
 	usb_raw_init(fd, USB_SPEED_FULL, driver, device);
 	usb_raw_run(fd);
